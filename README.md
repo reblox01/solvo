@@ -1,54 +1,86 @@
-# React + TypeScript + Vite
+# Solvo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Solvo is an AI-powered calculator web app that brings the intuitive, handwriting-based calculation experience of the iPad to any device. Write equations naturally using your finger, stylus, or mouse, and get instant, step-by-step solutions for arithmetic, algebra, calculus, and more.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Handwriting Recognition:** Input equations by writing directly on the screen.
+- **Instant Computation:** Get immediate and accurate results for a wide range of math problems.
+- **Step-by-Step Explanations:** Follow detailed breakdowns to learn how each problem is solved.
+- **Responsive Design:** Fully accessible on desktops, tablets, and smartphones.
+- **Interactive Learning:** Perfect for students, professionals, and math enthusiasts.
 
-## Expanding the ESLint configuration
+## Demo
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Watch Solvo in action on YouTube (not available currently):  
+[Solvo AI Calculator Demo](#)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Installation
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Prerequisites
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Node.js (v14 or later)
+- npm or yarn
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+### Steps
+
+1. **Clone the Repository:**
+
+   ```bash
+   git clone https://github.com/yourusername/solvo.git
+   cd solvo
+  ```
+
+2. **Install Dependencies:**
+
+  ```bash
+  npm install
+  # or
+  yarn install
+  ```
+
+3. **Run the App:**
+
+  ```bash
+  npm start
+  # or
+  yarn start
+  ```
+
+4. **Open in Browser:**
+
+Visit [http://localhost:3000](http://localhost:3000) in your web browser.
+
+
+## Usage
+
+- **Input Equations:** Write equations on the canvas using your preferred input method.
+- **View Results:** Solvo instantly recognizes your handwriting, computes the answer, and displays a step-by-step solution.
+- **Learn:** Click on individual steps for additional insights and explanations.
+
+## Technologies Used
+
+- **Frontend:** React.js
+- **Backend:** Node.js with Express (if applicable)
+- **Machine Learning:** TensorFlow.js (for handwriting recognition)
+- **Styling:** TailwindCSS, CSS/SCSS with modern UI libraries
+- **Deployment:** Vercel (or your preferred cloud service like Docker/Heroku)
+
+## Contributing
+
+Contributions are welcome! To get started:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Commit your changes and push your branch.
+4. Open a pull request with a clear description of your changes.
+
+Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) when contributing.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For questions, suggestions, or feedback, please open an issue or contact us at [sohailkoutari@gmail.com](mailto:sohailkoutari@gmail.com).
