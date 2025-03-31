@@ -2,6 +2,8 @@
 
 Solvo is an AI-powered calculator web app that brings the intuitive, handwriting-based calculation experience of the iPad to any device. Write equations naturally using your finger, stylus, or mouse, and get instant, step-by-step solutions for arithmetic, algebra, calculus, and more.
 
+## [Back end](https://github.com/reblox01/solvo-backend.git)
+
 ## Features
 
 - **Handwriting Recognition:** Input equations by writing directly on the screen.
