@@ -1,9 +1,10 @@
-import { ColorSwatch, Group } from '@mantine/core';
+import { ColorSwatch } from '@mantine/core';
 import { Button } from '@/components/ui/button';
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import Draggable from 'react-draggable';
 import {SWATCHES} from '@/constants';
+import { Eraser, Pencil, RotateCcw, Play, Palette } from 'lucide-react';
 // import {LazyBrush} from 'lazy-brush';
 
 interface GeneratedResult {
@@ -21,6 +22,9 @@ export default function Home() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [color, setColor] = useState('rgb(255, 255, 255)');
+    const [isEraser, setIsEraser] = useState(false);
+    const [showColors, setShowColors] = useState(false);
+    const [lineWidth, setLineWidth] = useState(3);
     const [reset, setReset] = useState(false);
     const [dictOfVars, setDictOfVars] = useState({});
     const [result, setResult] = useState<GeneratedResult>();
@@ -66,7 +70,7 @@ export default function Home() {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight - canvas.offsetTop;
                 ctx.lineCap = 'round';
-                ctx.lineWidth = 3;
+                ctx.lineWidth = lineWidth;
             }
 
         }
@@ -112,14 +116,36 @@ export default function Home() {
         }
     };
 
+    const toggleEraser = () => {
+        setIsEraser(!isEraser);
+        setShowColors(false);
+        if (!isEraser) {
+            setLineWidth(20);
+            setColor('rgb(0, 0, 0)');
+        } else {
+            setLineWidth(3);
+            setColor('rgb(255, 255, 255)');
+        }
+    };
+
+    const toggleColorPalette = () => {
+        setShowColors(!showColors);
+        if (isEraser) {
+            setIsEraser(false);
+            setLineWidth(3);
+            setColor('rgb(255, 255, 255)');
+        }
+    };
+
     const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
         const canvas = canvasRef.current;
         if (canvas) {
-            canvas.style.background = 'black';
             const ctx = canvas.getContext('2d');
             if (ctx) {
                 ctx.beginPath();
                 ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
                 setIsDrawing(true);
             }
         }
@@ -133,6 +159,7 @@ export default function Home() {
             const ctx = canvas.getContext('2d');
             if (ctx) {
                 ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
                 ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
                 ctx.stroke();
             }
@@ -199,33 +226,61 @@ export default function Home() {
 
     return (
         <>
-            <div className='grid grid-cols-3 gap-2'>
+            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-2 bg-gray-900/50 p-2 rounded-lg backdrop-blur-sm">
                 <Button
                     onClick={() => setReset(true)}
-                    className='z-20 bg-black text-white'
-                    variant='default' 
-                    color='black'
+                    className="bg-transparent hover:bg-gray-800 text-white p-2 rounded-lg transition-all duration-200"
+                    variant="ghost"
+                    size="icon"
                 >
-                    Reset
+                    <RotateCcw className="h-5 w-5" />
                 </Button>
-                <Group className='z-20'>
-                    {SWATCHES.map((swatch) => (
-                        <ColorSwatch key={swatch} color={swatch} onClick={() => setColor(swatch)} />
-                    ))}
-                </Group>
+                
+                <div className="relative">
+                    <Button
+                        onClick={toggleColorPalette}
+                        className={`bg-transparent hover:bg-gray-800 text-white p-2 rounded-lg transition-all duration-200 ${showColors ? 'bg-gray-800' : ''}`}
+                        variant="ghost"
+                        size="icon"
+                    >
+                        <Palette className="h-5 w-5" style={{ color: color === 'rgb(0, 0, 0)' ? 'white' : color }} />
+                    </Button>
+                    {showColors && (
+                        <div className="absolute top-full left-0 mt-2 p-2 bg-gray-900/50 backdrop-blur-sm rounded-lg flex gap-1">
+                            {SWATCHES.map((swatch) => (
+                                <ColorSwatch
+                                    key={swatch}
+                                    color={swatch}
+                                    onClick={() => setColor(swatch)}
+                                    className="cursor-pointer hover:scale-110 transition-transform"
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <Button
+                    onClick={toggleEraser}
+                    className={`bg-transparent hover:bg-gray-800 text-white p-2 rounded-lg transition-all duration-200 ${isEraser ? 'bg-gray-800' : ''}`}
+                    variant="ghost"
+                    size="icon"
+                >
+                    {isEraser ? <Pencil className="h-5 w-5" /> : <Eraser className="h-5 w-5" />}
+                </Button>
+
                 <Button
                     onClick={runRoute}
-                    className='z-20 bg-black text-white'
-                    variant='default'
-                    color='white'
+                    className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-all duration-200"
+                    size="icon"
                 >
-                    Run
+                    <Play className="h-5 w-5" />
                 </Button>
             </div>
+
             <canvas
                 ref={canvasRef}
                 id='canvas'
-                className='absolute top-0 left-0 w-full h-full'
+                className='absolute top-0 left-0 w-full h-full bg-black'
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
