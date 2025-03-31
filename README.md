@@ -1,4 +1,4 @@
-# Solvo
+# Solvo - Ai Calculator
 
 Solvo is an AI-powered calculator web app that brings the intuitive, handwriting-based calculation experience of the iPad to any device. Write equations naturally using your finger, stylus, or mouse, and get instant, step-by-step solutions for arithmetic, algebra, calculus, and more.
 
@@ -29,27 +29,27 @@ Watch Solvo in action on YouTube (not available currently):
    ```bash
    git clone https://github.com/yourusername/solvo.git
    cd solvo
-  ```
+   ```
 
 2. **Install Dependencies:**
 
-  ```bash
-  npm install
-  # or
-  yarn install
-  ```
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
 3. **Run the App:**
 
-  ```bash
-  npm start
-  # or
-  yarn start
-  ```
+   ```bash
+   npm start
+   # or
+   yarn start
+   ```
 
 4. **Open in Browser:**
 
-Visit [http://localhost:3000](http://localhost:3000) in your web browser.
+  Visit [http://localhost:3000](http://localhost:3000) in your web browser.
 
 
 ## Usage
