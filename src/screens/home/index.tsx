@@ -5,6 +5,7 @@ import axios from 'axios';
 import Draggable from 'react-draggable';
 import {SWATCHES} from '@/constants';
 import { Eraser, Pencil, RotateCcw, Play, Palette } from 'lucide-react';
+import logo from '/logo.svg';
 // import {LazyBrush} from 'lazy-brush';
 
 interface GeneratedResult {
@@ -226,10 +227,13 @@ export default function Home() {
 
     return (
         <>
+            <div className="hidden md:block fixed top-0 left-16 z-30">
+                <img src={logo} alt="Logo" className="h-24 w-36 md:h-24 md:w-36 hover:scale-110 transition-transform duration-200 shadow-lg" />
+            </div>
             <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-2 bg-gray-900/50 p-2 rounded-lg backdrop-blur-sm">
                 <Button
                     onClick={() => setReset(true)}
-                    className="bg-transparent hover:bg-gray-800 text-white p-2 rounded-lg transition-all duration-200"
+                    className="bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200"
                     variant="ghost"
                     size="icon"
                 >
@@ -261,7 +265,7 @@ export default function Home() {
 
                 <Button
                     onClick={toggleEraser}
-                    className={`bg-transparent hover:bg-gray-800 text-white p-2 rounded-lg transition-all duration-200 ${isEraser ? 'bg-gray-800' : ''}`}
+                    className={`bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200 ${isEraser ? 'bg-gray-800' : ''}`}
                     variant="ghost"
                     size="icon"
                 >
@@ -291,7 +295,7 @@ export default function Home() {
                 <Draggable
                     key={index}
                     defaultPosition={latexPosition}
-                    onStop={(e, data) => setLatexPosition({ x: data.x, y: data.y })}
+                    onStop={(_, data) => setLatexPosition({ x: data.x, y: data.y })}
                 >
                     <div className="absolute p-2 text-white rounded shadow-md">
                         <div className="latex-content">{latex}</div>
