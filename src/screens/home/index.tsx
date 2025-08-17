@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import axios from 'axios';
 import Draggable from 'react-draggable';
 import {SWATCHES} from '@/constants';
-import { Eraser, Pencil, RotateCcw, Play, Palette } from 'lucide-react';
+import { Eraser, Pencil, RotateCcw, Play, Palette, CornerUpLeft, CornerUpRight } from 'lucide-react';
 import logo from '/logo.svg';
 // import {LazyBrush} from 'lazy-brush';
 
@@ -37,6 +37,16 @@ export default function Home() {
     const [previewPos, setPreviewPos] = useState<{ x: number; y: number } | null>(null);
     const [previewWidth, setPreviewWidth] = useState<number>(lineWidth);
     const [showPreview, setShowPreview] = useState<boolean>(false);
+    // undo/redo stacks (store ImageData)
+    const undoStackRef = useRef<ImageData[]>([]);
+    const redoStackRef = useRef<ImageData[]>([]);
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
+
+    const updateStackStates = useCallback(() => {
+        setCanUndo(undoStackRef.current.length > 0);
+        setCanRedo(redoStackRef.current.length > 0);
+    }, []);
     const colorRef = useRef<HTMLDivElement | null>(null);
     const widthRef = useRef<HTMLDivElement | null>(null);
 
@@ -175,6 +185,8 @@ export default function Home() {
         return () => document.removeEventListener('mousedown', onDocDown);
     }, [showColors, showWidth]);
 
+    // keyboard shortcuts (registered after handlers are defined)
+
     // Pointer-based drawing with basic palm rejection
     const activePointerId = useRef<number | null>(null);
 
@@ -283,12 +295,90 @@ export default function Home() {
                 // ignore
             }
         }
+        const canvas = canvasRef.current;
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                // Push current state to undo stack
+                try {
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    undoStackRef.current.push(imageData);
+                    // clear redo on new action
+                    redoStackRef.current = [];
+                    updateStackStates();
+                } catch {
+                    // ignore
+                }
+            }
+        }
+
         activePointerId.current = null;
         setIsDrawing(false);
         setShowPreview(false);
         lastPosRef.current = null;
         lastMidRef.current = null;
     };
+
+    const restoreImageData = (imageData: ImageData) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.putImageData(imageData, 0, 0);
+    };
+
+    const handleUndo = useCallback(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!canvas || !ctx) return;
+        if (undoStackRef.current.length === 0) return;
+
+        // pop last state and move current to redo
+        const last = undoStackRef.current.pop()!;
+        try {
+            const current = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            redoStackRef.current.push(current);
+        } catch {
+            // ignore
+        }
+        restoreImageData(last);
+        updateStackStates();
+    }, [updateStackStates]);
+
+    const handleRedo = useCallback(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!canvas || !ctx) return;
+        if (redoStackRef.current.length === 0) return;
+
+        const last = redoStackRef.current.pop()!;
+        try {
+            const current = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            undoStackRef.current.push(current);
+        } catch {
+            // ignore
+        }
+        restoreImageData(last);
+        updateStackStates();
+    }, [updateStackStates]);
+
+    // keyboard shortcuts (registered after handlers are defined)
+    useEffect(() => {
+        const onKey = (ev: KeyboardEvent) => {
+            const isMac = navigator.platform.toLowerCase().includes('mac');
+            const ctrl = isMac ? ev.metaKey : ev.ctrlKey;
+            if (ctrl && ev.key.toLowerCase() === 'z') {
+                ev.preventDefault();
+                if (ev.shiftKey) {
+                    handleRedo();
+                } else {
+                    handleUndo();
+                }
+            }
+        };
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, [handleUndo, handleRedo]);
 
     const runRoute = async () => {
         const canvas = canvasRef.current;
@@ -358,6 +448,22 @@ export default function Home() {
                     size="icon"
                 >
                     <RotateCcw className="h-5 w-5" />
+                </Button>
+                <Button
+                    onClick={handleUndo}
+                    className={`bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200 ${canUndo ? '' : 'opacity-40 pointer-events-none'}`}
+                    variant="ghost"
+                    size="icon"
+                >
+                    <CornerUpLeft className="h-5 w-5" />
+                </Button>
+                <Button
+                    onClick={handleRedo}
+                    className={`bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200 ${canRedo ? '' : 'opacity-40 pointer-events-none'}`}
+                    variant="ghost"
+                    size="icon"
+                >
+                    <CornerUpRight className="h-5 w-5" />
                 </Button>
                 
                 <div className="relative" ref={colorRef}>
