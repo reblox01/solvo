@@ -49,6 +49,7 @@ export default function Home() {
     }, []);
     const colorRef = useRef<HTMLDivElement | null>(null);
     const widthRef = useRef<HTMLDivElement | null>(null);
+    const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac');
 
     // const lazyBrush = new LazyBrush({
     //     radius: 10,
@@ -365,7 +366,6 @@ export default function Home() {
     // keyboard shortcuts (registered after handlers are defined)
     useEffect(() => {
         const onKey = (ev: KeyboardEvent) => {
-            const isMac = navigator.platform.toLowerCase().includes('mac');
             const ctrl = isMac ? ev.metaKey : ev.ctrlKey;
             if (ctrl && ev.key.toLowerCase() === 'z') {
                 ev.preventDefault();
@@ -375,10 +375,16 @@ export default function Home() {
                     handleUndo();
                 }
             }
+
+            // Ctrl/Cmd+Y also triggers redo
+            if (ctrl && ev.key.toLowerCase() === 'y') {
+                ev.preventDefault();
+                handleRedo();
+            }
         };
         document.addEventListener('keydown', onKey);
         return () => document.removeEventListener('keydown', onKey);
-    }, [handleUndo, handleRedo]);
+    }, [handleUndo, handleRedo, isMac]);
 
     const runRoute = async () => {
         const canvas = canvasRef.current;
@@ -449,22 +455,28 @@ export default function Home() {
                 >
                     <RotateCcw className="h-5 w-5" />
                 </Button>
-                <Button
-                    onClick={handleUndo}
-                    className={`bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200 ${canUndo ? '' : 'opacity-40 pointer-events-none'}`}
-                    variant="ghost"
-                    size="icon"
-                >
-                    <CornerUpLeft className="h-5 w-5" />
-                </Button>
-                <Button
-                    onClick={handleRedo}
-                    className={`bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200 ${canRedo ? '' : 'opacity-40 pointer-events-none'}`}
-                    variant="ghost"
-                    size="icon"
-                >
-                    <CornerUpRight className="h-5 w-5" />
-                </Button>
+                <div className="relative">
+                    <Button
+                        onClick={handleUndo}
+                        className={`bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200 ${canUndo ? '' : 'opacity-40 pointer-events-none'}`}
+                        variant="ghost"
+                        size="icon"
+                        title={isMac ? 'Undo (⌘+Z)' : 'Undo (Ctrl+Z)'}
+                    >
+                        <CornerUpLeft className="h-5 w-5" />
+                    </Button>
+                </div>
+                <div className="relative">
+                    <Button
+                        onClick={handleRedo}
+                        className={`bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200 ${canRedo ? '' : 'opacity-40 pointer-events-none'}`}
+                        variant="ghost"
+                        size="icon"
+                        title={isMac ? 'Redo (⌘+Shift+Z / ⌘+Y)' : 'Redo (Ctrl+Shift+Z / Ctrl+Y)'}
+                    >
+                        <CornerUpRight className="h-5 w-5" />
+                    </Button>
+                </div>
                 
                 <div className="relative" ref={colorRef}>
                     <Button
