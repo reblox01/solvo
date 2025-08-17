@@ -15,7 +15,7 @@ Solvo is an AI-powered calculator web app that brings the intuitive, handwriting
 ## Demo
 
 Watch Solvo in action on YouTube (not available currently):  
-[Solvo AI Calculator Demo](#)
+[Solvo AI Calculator Demo](https://github.com/reblox01/solvo/blob/master/public/Screenshot.png)
 
 ## Installation
 
