@@ -2,9 +2,10 @@ import { ColorSwatch } from '@mantine/core';
 import { Button } from '@/components/ui/button';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import axios from 'axios';
+import html2canvas from 'html2canvas';
 import Draggable from 'react-draggable';
 import {SWATCHES} from '@/constants';
-import { Eraser, Pencil, RotateCcw, Play, Palette, CornerUpLeft, CornerUpRight } from 'lucide-react';
+import { Eraser, Pencil, RotateCcw, Play, Palette, CornerUpLeft, CornerUpRight, Download, Share2 } from 'lucide-react';
 import logo from '/logo.svg';
 // import {LazyBrush} from 'lazy-brush';
 
@@ -50,6 +51,9 @@ export default function Home() {
     const colorRef = useRef<HTMLDivElement | null>(null);
     const widthRef = useRef<HTMLDivElement | null>(null);
     const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac');
+    const workspaceRef = useRef<HTMLDivElement | null>(null);
+    const toolbarRef = useRef<HTMLDivElement | null>(null);
+    const logoRef = useRef<HTMLDivElement | null>(null);
 
     // const lazyBrush = new LazyBrush({
     //     radius: 10,
@@ -441,12 +445,103 @@ export default function Home() {
         }
     };
 
+    const downloadDataUrl = (dataUrl: string, filename: string) => {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    };
+
+    const exportWorkspaceAsImage = async (hideUi = false) => {
+        const node = workspaceRef.current || document.body;
+        const bg = node ? window.getComputedStyle(node).backgroundColor : '#ffffff';
+        const toHide: HTMLElement[] = [];
+        try {
+            if (hideUi) {
+                if (toolbarRef.current) toHide.push(toolbarRef.current);
+                if (logoRef.current) toHide.push(logoRef.current);
+                toHide.forEach((el) => { (el.style as CSSStyleDeclaration).visibility = 'hidden'; });
+            }
+
+            const snap = await html2canvas(node as HTMLElement, { backgroundColor: bg, useCORS: true, scale: window.devicePixelRatio });
+            return snap.toDataURL('image/png');
+        } catch {
+            // fallback to canvas only
+            const canvas = canvasRef.current;
+            if (!canvas) return null;
+            return canvas.toDataURL('image/png');
+        } finally {
+            if (hideUi) toHide.forEach((el) => { (el.style as CSSStyleDeclaration).visibility = ''; });
+        }
+    };
+
+    const handleExport = async () => {
+        const dataUrl = await exportWorkspaceAsImage(true);
+        if (dataUrl) downloadDataUrl(dataUrl, `solvo-${Date.now()}.png`);
+    };
+
+    const handleShare = async () => {
+        // Export image (without UI)
+        const dataUrl = await exportWorkspaceAsImage(true);
+        if (!dataUrl) return;
+
+        // Convert dataURL to blob
+        let blob: Blob | null = null;
+        try {
+            const res = await fetch(dataUrl);
+            blob = await res.blob();
+        } catch {
+            // fallback: trigger download
+            handleExport();
+            return;
+        }
+
+        // Try upload to backend to get a sharable link
+        try {
+            const file = new File([blob], `solvo-${Date.now()}.png`, { type: 'image/png' });
+            const form = new FormData();
+            form.append('file', file);
+            const resp = await axios.post(`${import.meta.env.VITE_API_URL}/upload`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+            const url = resp?.data?.url;
+            if (url) {
+                try { await navigator.clipboard.writeText(url); } catch {
+                    // ignore clipboard errors
+                }
+                window.alert('Shareable link copied to clipboard:\n' + url);
+                return;
+            }
+        } catch {
+            // upload failed, fall through to Web Share API
+        }
+
+        // Try Web Share API with the file
+        try {
+            const shareNav = navigator as unknown as { canShare?: (d: { files?: File[] }) => boolean; share?: (data: { files?: File[]; title?: string }) => Promise<void> };
+            const file = new File([blob], `solvo-${Date.now()}.png`, { type: 'image/png' });
+            if (shareNav.canShare && shareNav.canShare({ files: [file] })) {
+                await (navigator as unknown as { share: (data: { files: File[]; title?: string }) => Promise<void> }).share({ files: [file], title: 'Solvo drawing' });
+                return;
+            }
+            if (shareNav.share) {
+                await (navigator as unknown as { share: (data: { files: File[]; title?: string }) => Promise<void> }).share({ files: [file], title: 'Solvo drawing' });
+                return;
+            }
+        } catch {
+            // ignore
+        }
+
+        // final fallback: download
+        handleExport();
+    };
+
     return (
         <>
-            <div className="hidden md:block fixed top-0 left-16 z-30">
+            <div ref={logoRef} className="hidden md:block fixed top-0 left-16 z-30">
                 <img src={logo} alt="Logo" className="h-24 w-36 md:h-24 md:w-36 hover:scale-110 transition-transform duration-200 shadow-lg" />
             </div>
-            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900/50 p-2 rounded-lg backdrop-blur-sm">
+            <div ref={toolbarRef} className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900/50 p-2 rounded-lg backdrop-blur-sm">
                 <Button
                     onClick={() => setReset(true)}
                     className="bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200"
@@ -541,6 +636,24 @@ export default function Home() {
                     size="icon"
                 >
                     <Play className="h-5 w-5" />
+                </Button>
+                <Button
+                    onClick={handleExport}
+                    className="bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200"
+                    variant="ghost"
+                    size="icon"
+                    title="Download PNG"
+                >
+                    <Download className="h-5 w-5" />
+                </Button>
+                <Button
+                    onClick={handleShare}
+                    className="bg-transparent hover:bg-gray-100 text-white p-2 rounded-lg transition-all duration-200"
+                    variant="ghost"
+                    size="icon"
+                    title="Share"
+                >
+                    <Share2 className="h-5 w-5" />
                 </Button>
             </div>
 
