@@ -1,6 +1,6 @@
 import { ColorSwatch } from '@mantine/core';
 import { Button } from '@/components/ui/button';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import axios from 'axios';
 import Draggable from 'react-draggable';
 import {SWATCHES} from '@/constants';
@@ -46,11 +46,25 @@ export default function Home() {
         }
     }, [latexExpression]);
 
+    const renderLatexToCanvas = useCallback((expression: string, answer: string) => {
+        const latex = `\\(\\LARGE{${expression} = ${answer}}\\)`;
+        setLatexExpression((prev) => [...prev, latex]);
+
+        // Clear the main canvas
+        const canvas = canvasRef.current;
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+    }, []);
+
     useEffect(() => {
         if (result) {
             renderLatexToCanvas(result.expression, result.answer);
         }
-    }, [result]);
+    }, [result, renderLatexToCanvas]);
 
     useEffect(() => {
         if (reset) {
@@ -64,14 +78,13 @@ export default function Home() {
 
     useEffect(() => {
         const canvas = canvasRef.current;
-    
+
         if (canvas) {
             const ctx = canvas.getContext('2d');
             if (ctx) {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight - canvas.offsetTop;
                 ctx.lineCap = 'round';
-                ctx.lineWidth = lineWidth;
             }
 
         }
@@ -92,19 +105,16 @@ export default function Home() {
 
     }, []);
 
-    const renderLatexToCanvas = (expression: string, answer: string) => {
-        const latex = `\\(\\LARGE{${expression} = ${answer}}\\)`;
-        setLatexExpression([...latexExpression, latex]);
-
-        // Clear the main canvas
+    // Update canvas context line width when lineWidth changes
+    useEffect(() => {
         const canvas = canvasRef.current;
         if (canvas) {
             const ctx = canvas.getContext('2d');
             if (ctx) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.lineWidth = lineWidth;
             }
         }
-    };
+    }, [lineWidth]);
 
 
     const resetCanvas = () => {
@@ -166,6 +176,49 @@ export default function Home() {
             }
         }
     };
+    // Touch event handlers for mobile
+    const getTouchPos = (touch: { clientX: number; clientY: number }) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return { x: 0, y: 0 };
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: touch.clientX - rect.left,
+            y: touch.clientY - rect.top,
+        };
+    };
+
+    const startDrawingTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault();
+        const canvas = canvasRef.current;
+        if (canvas && e.touches && e.touches.length > 0) {
+            const touchPos = getTouchPos(e.touches[0]);
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.beginPath();
+                ctx.moveTo(touchPos.x, touchPos.y);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+                setIsDrawing(true);
+            }
+        }
+    };
+
+    const drawTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault();
+        if (!isDrawing) return;
+        const canvas = canvasRef.current;
+        if (canvas && e.touches && e.touches.length > 0) {
+            const touchPos = getTouchPos(e.touches[0]);
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+                ctx.lineTo(touchPos.x, touchPos.y);
+                ctx.stroke();
+            }
+        }
+    };
+
     const stopDrawing = () => {
         setIsDrawing(false);
     };  
@@ -285,10 +338,14 @@ export default function Home() {
                 ref={canvasRef}
                 id='canvas'
                 className='absolute top-0 left-0 w-full h-full bg-black'
+                style={{ touchAction: 'none' }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
                 onMouseOut={stopDrawing}
+                onTouchStart={startDrawingTouch}
+                onTouchMove={drawTouch}
+                onTouchEnd={stopDrawing}
             />
 
             {latexExpression && latexExpression.map((latex, index) => (
