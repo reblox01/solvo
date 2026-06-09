@@ -9,6 +9,26 @@
     <meta name="keywords" content="Solvo, AI Calculator, Handwriting Recognition, Math Solver, Web Calculator, Step-by-Step Solutions" />
     <meta name="author" content="0x8D - reblox01" />
 
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+    
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.vercel-analytics.com;
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: blob: https://solvoai.vercel.app https://solvo-frontend.vercel.app https://solvo-backend.vercel.app;
+      font-src 'self' data:;
+      connect-src 'self' https://*.vercel.app https://vitals.vercel-insights.com;
+      frame-ancestors 'none';
+      base-uri 'self';
+      form-action 'self';
+    " />
+
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content="Solvo - AI Calculator" />
     <meta property="og:description" content="Experience the power of AI with Solvo, a web-based calculator that simplifies complex math through intuitive handwriting recognition and detailed solutions." />
